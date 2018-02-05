@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: echomap
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    # nginx.ingress.kubernetes.io/secure-backends: "true"
+    # ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+spec:
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: $SERVICE_NAME
+          servicePort: $SERVICE_PORT
+      - path: /anything
+        backend:
+          serviceName: $SERVICE_NAME
+          servicePort: $SERVICE_PORT
+      - path: /one/two/three
+        backend:
+          serviceName: $SERVICE_NAME
+          servicePort: $SERVICE_PORT
+  - host: bar.baz.com
+    http:
+      paths:
+      - path: /bar
+        backend:
+          serviceName: $SERVICE_NAME
+          servicePort: $SERVICE_PORT
