@@ -29,10 +29,17 @@ Targets:
 
   install              Install Everything (ReplicationController, Service & Ingress specs)
   delete               Delete Everything (ReplicationController, Service & Ingress specs)
+
   install-rc           Install ReplicationController Resource
   install-service      Install Service Resource
   install-ingress      Install Ingress Resource
+
   logs                 Find first pod and follow log output
+
+  tls                  Generate and Install TLS Cert
+  tls-generate         Generate a self-signed TLS cert
+  tls-secret-delete    Delete TLS Secret
+  tls-secret-create    Create TLS Secret from Cert
 ```
 
 ## Example
@@ -83,6 +90,105 @@ HEADERS RECEIVED:
     x-real-ip=10.138.36.5
     x-scheme=http
 BODY:
+```
+
+## TLS
+
+To utilize TLS you can either supply your own cert or generate on (below).
+The cert is copied into kubernetes as a secret that the ingress controller picks up.
+Once installed your ingress controller will show that it has registered the cert (if all goes well):
+
+```
+I0205 23:08:37.743651       7 backend_ssl.go:64] adding secret testing/tls-foo.bar.com to the local store
+```
+
+```sh
+$ make tls-generate tls-secret-create HOST=foo.bar.com
+
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout foo.bar.com.key -out tls-foo.bar.com.crt -subj "/CN=foo.bar.com/O=foo.bar.com"
+
+Generating a 2048 bit RSA private key
+...................................................................................................................................................................................................+++
+...............+++
+
+writing new private key to 'foo.bar.com.key'
+
+-----
+
+kubectl delete --ignore-not-found secret tls-foo.bar.com
+kubectl create secret tls tls-foo.b
+
+secret "tls-foo.bar.com" created
+```
+
+## Testing
+
+```sh
+$ kubectl describe ing/echomap -ntesting
+Name:             echomap
+Namespace:        testing
+Address:          35.188.134.67
+Default backend:  default-http-backend:80 (<none>)
+TLS:
+  tls-foo.bar.com terminates foo.bar.com
+Rules:
+  Host         Path  Backends
+  ----         ----  --------
+  foo.bar.com
+               /                testing-echoserver:80 (<none>)
+               /anything        testing-echoserver:80 (<none>)
+               /one/two/three   testing-echoserver:80 (<none>)
+  bar.baz.com
+               /bar   testing-echoserver:80 (<none>)
+Annotations:
+Events:
+  Type    Reason  Age                From                Message
+  ----    ------  ----               ----                -------
+  Normal  CREATE  50m                ingress-controller  Ingress testing/echomap
+  Normal  UPDATE  49m                ingress-controller  Ingress testing/echomap
+  Normal  CREATE  42m                ingress-controller  Ingress testing/echomap
+  Normal  UPDATE  21s (x3 over 41m)  ingress-controller  Ingress testing/echoma
+```
+
+curl'in:
+
+```sh
+$ curl -vvk https://35.188.134.67 -H 'Host:foo.bar.com'
+* Rebuilt URL to: https://35.188.134.67/
+*   Trying 35.188.134.67...
+* Connected to 35.188.134.67 (35.188.134.67) port 443 (#0)
+* found 148 certificates in /etc/ssl/certs/ca-certificates.crt
+* found 592 certificates in /etc/ssl/certs
+* ALPN, offering http/1.1
+* SSL connection using TLS1.2 / ECDHE_RSA_AES_128_GCM_SHA256
+*        server certificate verification SKIPPED
+*        server certificate status verification SKIPPED
+*        common name: Kubernetes Ingress Controller Fake Certificate (does not match '35.188.134.67')
+*        server certificate expiration date OK
+*        server certificate activation date OK
+*        certificate public key: RSA
+*        certificate version: #3
+*        subject: O=Acme Co,CN=Kubernetes Ingress Controller Fake Certificate
+*        start date: Mon, 05 Feb 2018 22:33:08 GMT
+*        expire date: Tue, 05 Feb 2019 22:33:08 GMT
+*        issuer: O=Acme Co,CN=Kubernetes Ingress Controller Fake Certificate
+*        compression: NULL
+* ALPN, server accepted to use http/1.1
+> GET / HTTP/1.1
+> Host:foo.bar.com
+> User-Agent: curl/7.47.0
+> Accept: */*
+>
+< HTTP/1.1 404 Not Found
+< Server: nginx/1.13.3
+< Date: Mon, 05 Feb 2018 23:13:27 GMT
+< Content-Type: text/plain; charset=utf-8
+< Content-Length: 21
+< Connection: keep-alive
+< Strict-Transport-Security: max-age=15724800; includeSubDomains;
+<
+* Connection #0 to host 35.188.134.67 left intact
+default backend
 ```
 
 ## Dumping specs

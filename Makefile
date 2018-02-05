@@ -9,6 +9,11 @@
 NS              ?= testing
 SERVICE_NAME    ?= testing-echoserver
 SERVICE_PORT    ?= 80
+HOST            ?= foo.bar.com
+CERT_NAME       ?= tls-$(HOST)
+CERT_FILE       ?= tls-$(HOST).crt
+KEY_FILE        ?= ${HOST}.key
+
 export
 
 all:        help
@@ -44,6 +49,23 @@ logs:
 	echo $(POD)
 
 	kubectl --namespace $(NS) logs -f $(POD)
+
+## Generate and Install TLS Cert
+tls: tls-generate tls-secret-create
+## Generate a self-signed TLS cert
+tls-generate:
+
+	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(KEY_FILE) -out $(CERT_FILE) -subj "/CN=$(HOST)/O=$(HOST)"
+
+## Delete TLS Secret
+tls-secret-delete:
+
+	kubectl --namespace $(NS) delete --ignore-not-found secret $(CERT_NAME)
+
+## Create TLS Secret from Cert
+tls-secret-create: tls-secret-delete
+
+	kubectl --namespace $(NS) create secret tls $(CERT_NAME) --key $(KEY_FILE) --cert $(CERT_FILE)
 
 # Help Outputs
 GREEN  		:= $(shell tput -Txterm setaf 2)
