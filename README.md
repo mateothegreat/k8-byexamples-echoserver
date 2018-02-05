@@ -179,16 +179,40 @@ $ curl -vvk https://35.188.134.67 -H 'Host:foo.bar.com'
 > User-Agent: curl/7.47.0
 > Accept: */*
 >
-< HTTP/1.1 404 Not Found
+< HTTP/1.1 200 OK
 < Server: nginx/1.13.3
-< Date: Mon, 05 Feb 2018 23:13:27 GMT
-< Content-Type: text/plain; charset=utf-8
-< Content-Length: 21
+< Date: Mon, 05 Feb 2018 23:16:38 GMT
+< Content-Type: text/plain
+< Transfer-Encoding: chunked
 < Connection: keep-alive
 < Strict-Transport-Security: max-age=15724800; includeSubDomains;
 <
+CLIENT VALUES:
+client_address=10.12.1.59
+command=GET
+real path=/
+query=nil
+request_version=1.1
+request_uri=http://foo.bar.com:8080/
+
+SERVER VALUES:
+server_version=nginx: 1.10.0 - lua: 10001
+
+HEADERS RECEIVED:
+accept=*/*
+connection=close
+host=foo.bar.com
+user-agent=curl/7.47.0
+x-forwarded-for=127.0.0.1
+x-forwarded-host=foo.bar.com
+x-forwarded-port=443
+x-forwarded-proto=https
+x-original-uri=/
+x-real-ip=127.0.0.1
+x-scheme=https
+BODY:
 * Connection #0 to host 35.188.134.67 left intact
-default backend
+-no body in reques
 ```
 
 ## Dumping specs
