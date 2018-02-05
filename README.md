@@ -15,6 +15,9 @@
 
 > k8 by example -- straight to the point, simple execution.
 
+Hook your fancy echoserver up with an ingress!
+See https://github.com/mateothegreat/k8-byexamples-ingress-controller
+
 ## Usage
 
 ```sh
