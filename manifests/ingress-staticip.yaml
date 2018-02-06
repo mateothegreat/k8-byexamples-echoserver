@@ -1,20 +1,22 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: echomap
+  name: staticip
   annotations:
-    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/tls-acme: "true"
     nginx.ingress.kubernetes.io/secure-backends: "true"
-    # ingress.kubernetes.io/ssl-passthrough: "true"
     nginx.ingress.kubernetes.io/rewrite-target: "/"
+    kubernetes.io/ingress.global-static-ip-name: "ingress"
+
 spec:
   tls:
   - hosts:
-    - foo.bar.com
-    secretName: tls-foo.bar.com
+    - ingress.gcp.streaming-platform.com
+    secretName: tls-ingress.gcp.streaming-platform.com
 
   rules:
-  - host: foo.bar.com
+  - host: ingress.gcp.streaming-platform.com
     http:
       paths:
       - path: /
@@ -26,13 +28,6 @@ spec:
           serviceName: $SERVICE_NAME
           servicePort: $SERVICE_PORT
       - path: /one/two/three
-        backend:
-          serviceName: $SERVICE_NAME
-          servicePort: $SERVICE_PORT
-  - host: bar.baz.com
-    http:
-      paths:
-      - path: /bar
         backend:
           serviceName: $SERVICE_NAME
           servicePort: $SERVICE_PORT

@@ -8,6 +8,7 @@
 
 NS              ?= testing
 SERVICE_NAME    ?= testing-echoserver
+APP             ?= testing-echoserver
 SERVICE_PORT    ?= 80
 HOST            ?= foo.bar.com
 CERT_NAME       ?= tls-$(HOST)
@@ -19,36 +20,16 @@ export
 all:        help
 
 ## Install Everything (ReplicationController, Service & Ingress specs)
-install:    install-rc install-service install-ingress
+install:    install-replication-controller install-service install-ingress
 ## Delete Everything (ReplicationController, Service & Ingress specs)
 delete:     delete-replication-controller delete-service delete-ingress
 
 ## Install ReplicationController Resource
-install-rc: apply-replication-controller
+install-rc: install-replication-controller
 ## Install Service Resource
-install-service: apply-service
+install-service: install-service
 ## Install Ingress Resource
-install-ingress: apply-ingress
-
-apply-%:
-
-	@envsubst < $*.yaml | kubectl --namespace $(NS) apply -f -
-
-delete-%:
-
-	@envsubst < $*.yaml | kubectl --namespace $(NS) delete --ignore-not-found -f -
-
-dump-%:
-
-	envsubst < $*.yaml
-
-## Find first pod and follow log output
-logs:
-
-	@$(eval POD:=$(shell kubectl get pods --all-namespaces -lk8s-app=fluentd-logging -o jsonpath='{.items[0].metadata.name}'))
-	echo $(POD)
-
-	kubectl --namespace $(NS) logs -f $(POD)
+# install-ingress: install-ingress
 
 ## Generate and Install TLS Cert
 tls: tls-generate tls-secret-create
@@ -67,6 +48,30 @@ tls-secret-create: tls-secret-delete
 
 	kubectl --namespace $(NS) create secret tls $(CERT_NAME) --key $(KEY_FILE) --cert $(CERT_FILE)
 
+## Create htpasswd secret (make htpasswd USERNAME=user PASSWORD=changeme)
+htpasswd:
+
+	docker run --rm -it appsoa/docker-alpine-htpasswd $(USERNAME) $(PASSWORD) > auth
+
+	kubectl --namespace $(NS) delete --ignore-not-found secret/basic-auth
+	kubectl --namespace $(NS) create secret generic basic-auth --from-file=auth
+
+# LIB
+install-%:
+	@envsubst < manifests/$*.yaml | kubectl --namespace $(NS) apply -f -
+
+delete-%:
+	@envsubst < manifests/$*.yaml | kubectl --namespace $(NS) delete --ignore-not-found -f -
+
+status-%:
+	@envsubst < manifests/$*.yaml | kubectl --namespace $(NS) rollout status -w -f -
+
+dump-%:
+	envsubst < manifests/$*.yaml
+## Find first pod and follow log output
+logs:
+	kubectl --namespace $(NS) logs -f $(shell kubectl get pods --all-namespaces -lapp=$(APP) -o jsonpath='{.items[0].metadata.name}')
+
 # Help Outputs
 GREEN  		:= $(shell tput -Txterm setaf 2)
 YELLOW 		:= $(shell tput -Txterm setaf 3)
@@ -84,3 +89,5 @@ help:
 		} \
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+	@echo
+# EOLIB
