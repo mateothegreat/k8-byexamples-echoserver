@@ -24,13 +24,6 @@ install:    install-replication-controller install-service install-ingress
 ## Delete Everything (ReplicationController, Service & Ingress specs)
 delete:     delete-replication-controller delete-service delete-ingress
 
-## Install ReplicationController Resource
-install-rc: install-replication-controller
-## Install Service Resource
-install-service: install-service
-## Install Ingress Resource
-# install-ingress: install-ingress
-
 ## Generate and Install TLS Cert
 tls: tls-generate tls-secret-create
 ## Generate a self-signed TLS cert
