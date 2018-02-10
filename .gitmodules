@@ -1,3 +1,6 @@
 [submodule "k8-byexamples-ingress-controller"]
 	path = k8-byexamples-ingress-controller
 	url = https://github.com/mateothegreat/k8-byexamples-ingress-controller
+[submodule ".make"]
+	path = .make
+	url = https://github.com/mateothegreat/.make
