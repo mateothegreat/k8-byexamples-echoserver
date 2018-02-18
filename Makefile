@@ -7,11 +7,11 @@
 #
 include .make/Makefile.inc
 
-# NS              ?= testing
-# SERVICE_NAME    ?= testing-echoserver
+NS              ?= default
+SERVICE_NAME    ?= echoserver
 APP             ?= $(SERVICE_NAME)
-# SERVICE_PORT    ?= 80
-# HOST            ?=
+SERVICE_PORT    ?= 80
+HOST            ?= echoserver.gcp.streaming-platform.com
 CERT_NAME       ?= tls-$(HOST)
 CERT_FILE       ?= tls-$(HOST).crt
 KEY_FILE        ?= ${HOST}.key
@@ -22,6 +22,7 @@ delete:     guard-NS guard-HOST guard-SERVICE_NAME guard-SERVICE_PORT
 
 ## Generate and Install TLS Cert
 tls: tls-generate tls-secret-create
+
 ## Generate a self-signed TLS cert
 tls-generate:
 
